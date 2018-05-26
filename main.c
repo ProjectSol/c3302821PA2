@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
 #define NUM_TEAMS 32
 
 // Defining the team structure with variables for all the requisite data we wish to store and record
@@ -29,60 +31,320 @@ struct Team {
 } Team;
 
 struct Team newTeamGeneration();
+
+void printBeginningText();
+
 void getTeamList(struct Team *list);
-void printNameGroup(struct Team *teamList);
 void pullMatchStats(struct Team *list);
+void calcPoints(struct Team *list);
+
+void bubbleSortByGroup(struct Team *list);
+void bubbleSortByPerform(struct Team *list);
+void bubbleSortByAlpha(struct Team *list);
+
 void outputTeamStandings(struct Team *list);
+void outputTeamStandingsReverse(struct Team *list);
+
+void outputGroupStandings(struct Team *list);
 void sortByGroup(struct Team *list);
-void bubbleSortByGroups(struct Team *list, const int arraySize);
 
+void outputAlphabeticalStandings(struct Team *list);
+void sortByAlphabet(struct Team *list);
 
+void outputPerformanceStandings(struct Team *list);
+void outputByWorstPerformance(struct Team *list);
+void sortByPerformance(struct Team *list);
 
 int main(void)
 {
   //All the data we will need for sure is pulled and stored into our necessary array here
   struct Team teamList[NUM_TEAMS];
+  printBeginningText();
   getTeamList(teamList);
   pullMatchStats(teamList);
+  calcPoints(teamList);
   sortByGroup(teamList);
-  //Now that we have things defined we can start up our main loop and
-  //let the user define which functions of the program they would lke to use
-  outputTeamStandings(teamList);
+  outputGroupStandings(teamList);
+  sortByAlphabet(teamList);
+  outputAlphabeticalStandings(teamList);
+  sortByPerformance(teamList);
+  outputPerformanceStandings(teamList);
+  //outputByWorstPerformance(teamList);
 }
 
-void sortByGroup(struct Team *list)
+void calcPoints(struct Team *list)
+{
+  for (int i = 0; i<NUM_TEAMS; i++)
+  {
+    list[i].points = list[i].gWon*3+list[i].gDrawn;
+  }
+  int loop = 0;
+  do{
+    printf("\nPlease enter \"y\" to continue enter \"n\" if you would instead like to quit without viewing results\n");
+    char pressY[2];
+    scanf("%s", &pressY);
+    if (pressY == "y")
+    {
+      loop = -1;
+    }
+    else if (pressY == "n")
+    {
+      //Ok but like actually why'd you even run the program then
+      exit(0);
+    }
+  } while (loop != -1);
+}
+
+void sortByAlphabet(struct Team *list)
 {
   for (int i = 0; i<NUM_TEAMS; i++)
   {
     char ch = list[i].group[0];
     int pos = ch - 'A' + 1;
     list[i].grAsNum = pos;
-    printf("%s %d\n",list[i].name,list[i].grAsNum);
+    //printf("%s %d\n",list[i].name,list[i].grAsNum);
   }
-  bubbleSortByGroups(list, NUM_TEAMS);
+  bubbleSortByAlpha(list);
 }
 
-void bubbleSortByGroups(struct Team *list, const int arraySize)
+void sortByGroup(struct Team *list)
 {
-int	i,	k;
+  printf("Ordering teams by group...\n\n");
+  for (int i = 0; i<NUM_TEAMS; i++)
+  {
+    char ch = list[i].group[0];
+    int pos = ch - 'A' + 1;
+    list[i].grAsNum = pos;
+    //printf("%s %d\n",list[i].name,list[i].grAsNum);
+  }
+  bubbleSortByGroup(list);
+}
+
+void sortByPerformance(struct Team *list)
+{
+  for (int i = 0; i<NUM_TEAMS; i++)
+  {
+    char ch = list[i].group[0];
+    int pos = ch - 'A' + 1;
+    list[i].grAsNum = pos;
+    //printf("%s %d\n",list[i].name,list[i].grAsNum);
+  }
+  bubbleSortByPerform(list);
+}
+
+int groupBubble(struct Team *list, int k, int j)
+{
+  int groupPos1 = list[k].grAsNum;
+  int groupPos2 = list[j].grAsNum;
+  if(abs(groupPos1) > abs(groupPos2))
+  {
+    //printf("%s %d and %s %d         GROUP SWAP\n",list[k].name,list[k].grAsNum,list[j].name,list[j].grAsNum);
+    struct Team temp = list[k];
+    list[k] = list[j];
+    list[j] = temp;
+    return 1;
+  }
+  else if(groupPos1 == groupPos2)
+  {
+    return 0;
+  }
+  else
+  {
+    return -1;
+  }
+}
+int pointsBubble(struct Team *list, int k, int j)
+{
+  int points1 = list[k].points;
+  int points2 = list[j].points;
+  if(points1 < points2)
+  {
+    //printf("%s %d and %s %d         POINTS SWAP\n",list[k].name,list[k].points,list[j].name,list[j].points);
+    struct Team temp = list[k];
+    list[k] = list[j];
+    list[j] = temp;
+    return 1;
+  }
+  else if(points1 == points2)
+  {
+    return 0;
+  }
+  else
+  {
+    return -1;
+  }
+}
+
+int differenceBubble(struct Team *list, int k, int j)
+{
+  int goalDifference1 = list[k].goalFor-list[k].goalAgainst;
+  int goalDifference2 = list[j].goalFor-list[j].goalAgainst;
+  if(goalDifference1 < goalDifference2)
+  {
+    //printf("%s %d and %s %d:      GOAL DIFFERENCE SWAP\n",list[k].name,goalDifference1,list[j].name,goalDifference2);
+    struct Team temp = list[k];
+    list[k] = list[j];
+    list[j] = temp;
+    return 1;
+  }
+  else if (goalDifference1 == goalDifference2)
+  {
+    return 0;
+  }
+  else
+  {
+    return -1;
+  }
+}
+
+int goalsBubble(struct Team *list, int k, int j)
+{
+  int goals1 = list[k].goalFor;
+  int goals2 = list[j].goalFor;
+  if(goals1 < goals2)
+  {
+    //printf("%s %d and %s %d:      GOAL TOTAL SWAP\n",list[k].name,goals1,list[j].name,goals2);
+    struct Team temp = list[k];
+    list[k] = list[j];
+    list[j] = temp;
+    return 1;
+  }
+  else if(goals1 == goals2)
+  {
+    return 0;
+  }
+  else
+  {
+    return -1;
+  }
+}
+
+int alphabetBubble(struct Team *list, int k, int j)
+{
+  if(strcmp(list[j].name,list[k].name) < 0)
+  {
+    //printf("%s and %s:     ALPHABETICAL SWAP\n",list[k].name,list[j].name);
+    struct Team temp = list[k];
+    list[k] = list[j];
+    list[j] = temp;
+    return 1;
+  }
+  else if(strcmp(list[k].name,list[j].name) == 0)
+  {
+    return 0;
+  }
+  else
+  {
+    return -1;
+  }
+}
+
+
+void bubbleSortByPerform(struct Team *list)
+{
+}
+
+void bubbleSortByAlpha(struct Team *list)
+{
+  // now tf is a special variable named after true and false which is a bit of a misnomer but I'm rambling
+  // If tf is 1 then the program executed successfully, and did swap the two inputed positions
+  // If tf is 0 the variables being compared were equal to each other and thus no action was taken
+  // If tf is -1 then nothing occured as both variables were in the correct position.
+  int tf;
+  int	j, i,	k;
+  int arraySize = NUM_TEAMS;
   for(i	=	0;	i	<	arraySize;	i++)
   {
     for(k	=	0;	k	<	arraySize-1;	k++)
     {
-      if(abs(list[k].grAsNum) > abs(list[k+1].grAsNum))
+      tf = 1;
+      int j  = k+1;
+      tf = alphabetBubble(list,k,j);
+
+      if(tf == 0)
       {
-        printf("Swapping entries %d and %d",k,i);
-        struct Team temp = list[k];
-        list[k] = list[i];
-        list[i] = temp;
+        tf = pointsBubble(list,k,j);
+
+        if(tf == 0)
+        {
+          tf = differenceBubble(list,k,j);
+
+          if(tf == 0)
+          {
+            tf = goalsBubble(list,k,j);
+          }
+        }
       }
     }
   }
 }
 
+void bubbleSortByGroup(struct Team *list)
+{
+  // now tf is a special variable named after true and false which is a bit of a misnomer but I'm rambling
+  // If tf is 1 then the program executed successfully, and did swap the two inputed positions
+  // If tf is 0 the variables being compared were equal to each other and thus no action was taken
+  // If tf is -1 then nothing occured as both variables were in the correct position.
+  int tf;
+  int	j, i,	k;
+  int arraySize = NUM_TEAMS;
+  for(i	=	0;	i	<	arraySize;	i++)
+  {
+    for(k	=	0;	k	<	arraySize-1;	k++)
+    {
+      tf = 1;
+      int j  = k+1;
+      tf = groupBubble(list, k, j);
+
+      if(tf == 0)
+      {
+        tf = pointsBubble(list,k,j);
+
+        if(tf == 0)
+        {
+          tf = differenceBubble(list,k,j);
+
+          if(tf == 0)
+          {
+            tf = goalsBubble(list,k,j);
+
+            if(tf == 0)
+            {
+              tf = alphabetBubble(list,k,j);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void outputAlphabeticalStandings(struct Team *list)
+{
+  printf("\n");
+  outputTeamStandings(list);
+}
+
+void outputGroupStandings(struct Team *list)
+{
+  printf("\n");
+  outputTeamStandings(list);
+}
+
+void outputPerformanceStandings(struct Team *list)
+{
+  printf("\n");
+  outputTeamStandings(list);
+}
+
+void outputByWorstPerformance(struct Team *list)
+{
+  outputTeamStandingsReverse(list);
+}
+
 void outputTeamStandings(struct Team *list)
 {
-  char initialGroup[2] = "-";
+  char initialGroup[2] = "_";
   //Split for neatness and also doing this for some reason fixed a bug I was having so...
   printf("| Group | %-16s | %-13s | %-13s | %-13s ","Name","Games Played", "Games Won","Games Drawn");
   printf("| %-13s | %-13s | %-13s | %-13s |\n","Games Lost","Goals For", "Goals Against","Points");
@@ -95,24 +357,40 @@ void outputTeamStandings(struct Team *list)
       strcpy(initialGroup, list[i].group);
       //Split for neatness and also doing this for some reason fixed a bug I was having so...
       printf("\n| Group | %-16s | %-13s | %-13s | %-13s ","Name","Games Played", "Games Won","Games Drawn");
-      printf("| %-13s | %-13s | %-13s | %-13s |\n","Games Lost","Goals For", "Goals Against","Points");
+      printf("| %-13s | %-13s | %-13s | %-13s | %-13s |\n","Games Lost","Goals For", "Goals Against", "Goal Diff", "Points");
 
-        printf("| %-5s | %-16s | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d |\n",t.group,t.name,t.gPlayed,t.gWon,t.gDrawn,t.gLost,t.goalFor,t.goalAgainst,t.points);
+        printf("| %-5s | %-16s | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d |\n",t.group,t.name,t.gPlayed,t.gWon,t.gDrawn,t.gLost,t.goalFor,t.goalAgainst,t.goalFor-t.goalAgainst,t.points);
     }
     else
     {
-      printf("| %-5s | %-16s | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d |\n","",t.name,t.gPlayed,t.gWon,t.gDrawn,t.gLost,t.goalFor,t.goalAgainst,t.points);
+      printf("| %-5s | %-16s | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d |\n","",t.name,t.gPlayed,t.gWon,t.gDrawn,t.gLost,t.goalFor,t.goalAgainst,t.goalFor-t.goalAgainst,t.points);
     }
   }
 }
 
-void printNameGroup(struct Team *teamList)
+void outputTeamStandingsReverse(struct Team *list)
 {
+  char initialGroup[2] = "_";
+  //Split for neatness and also doing this for some reason fixed a bug I was having so...
+  printf("| Group | %-16s | %-13s | %-13s | %-13s ","Name","Games Played", "Games Won","Games Drawn");
+  printf("| %-13s | %-13s | %-13s | %-13s |\n","Games Lost","Goals For", "Goals Against","Points");
   for (int i = 0; i<NUM_TEAMS; i++)
   {
-    printf("%s\n",teamList[i].name);
-    printf("%s\n",teamList[i].group);
-    printf("%d\n",teamList[i].goalFor);
+    list[i].points = list[i].gWon*3+list[i].gDrawn;
+    struct Team t = list[i];
+    if (strcmp(initialGroup,list[i].group)!=0)
+    {
+      strcpy(initialGroup, list[i].group);
+      //Split for neatness and also doing this for some reason fixed a bug I was having so...
+      printf("\n| Group | %-16s | %-13s | %-13s | %-13s ","Name","Games Played", "Games Won","Games Drawn");
+      printf("| %-13s | %-13s | %-13s | %-13s | %-13s |\n","Games Lost","Goals For", "Goals Against", "Goal Diff", "Points");
+
+        printf("| %-5s | %-16s | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d |\n",t.group,t.name,t.gPlayed,t.gWon,t.gDrawn,t.gLost,t.goalFor,t.goalAgainst,t.goalFor-t.goalAgainst,t.points);
+    }
+    else
+    {
+      printf("| %-5s | %-16s | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d |\n","",t.name,t.gPlayed,t.gWon,t.gDrawn,t.gLost,t.goalFor,t.goalAgainst,t.goalFor-t.goalAgainst,t.points);
+    }
   }
 }
 
@@ -237,7 +515,9 @@ void pullMatchStats(struct Team *list)
       if (breakOut != -1)
       {
         list[teamNum1].goalFor += score1;
+        list[teamNum1].goalAgainst += score2;
         list[teamNum2].goalFor += score2;
+        list[teamNum2].goalAgainst += score1;
         list[teamNum1].gPlayed ++;
         list[teamNum2].gPlayed ++;
         if (score1>score2)
@@ -313,4 +593,9 @@ struct Team newTeamGeneration()
   newTeam.points = 0;
 
   return newTeam;
+}
+
+void printBeginningText()
+{
+  printf("FIFA World Cup – Russia 2018\nProgram	Developed	by Solomon Scobie\nStudent Number c3302821\nComputer Lab Wednesday 9 am - 12 pm");
 }
