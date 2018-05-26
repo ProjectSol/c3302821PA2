@@ -43,6 +43,7 @@ void bubbleSortByPerform(struct Team *list);
 void bubbleSortByAlpha(struct Team *list);
 
 void outputTeamStandings(struct Team *list);
+void outputTeamStandingsGroupSpacing(struct Team *list);
 void outputTeamStandingsReverse(struct Team *list);
 
 void outputGroupStandings(struct Team *list);
@@ -83,11 +84,11 @@ void calcPoints(struct Team *list)
     printf("\nPlease enter \"y\" to continue enter \"n\" if you would instead like to quit without viewing results\n");
     char pressY[2];
     scanf("%s", &pressY);
-    if (pressY == "y")
+    if (strcmp(pressY,"y")==0)
     {
       loop = -1;
     }
-    else if (pressY == "n")
+    else if (strcmp(pressY, "n")==0)
     {
       //Ok but like actually why'd you even run the program then
       exit(0);
@@ -97,6 +98,7 @@ void calcPoints(struct Team *list)
 
 void sortByAlphabet(struct Team *list)
 {
+  printf("\nOrdering teams alphabetically...\n");
   for (int i = 0; i<NUM_TEAMS; i++)
   {
     char ch = list[i].group[0];
@@ -109,7 +111,7 @@ void sortByAlphabet(struct Team *list)
 
 void sortByGroup(struct Team *list)
 {
-  printf("Ordering teams by group...\n\n");
+  printf("\nOrdering teams by group...\n");
   for (int i = 0; i<NUM_TEAMS; i++)
   {
     char ch = list[i].group[0];
@@ -122,6 +124,7 @@ void sortByGroup(struct Team *list)
 
 void sortByPerformance(struct Team *list)
 {
+  printf("\nOrdering teams by performance...\n");
   for (int i = 0; i<NUM_TEAMS; i++)
   {
     char ch = list[i].group[0];
@@ -153,6 +156,7 @@ int groupBubble(struct Team *list, int k, int j)
     return -1;
   }
 }
+
 int pointsBubble(struct Team *list, int k, int j)
 {
   int points1 = list[k].points;
@@ -242,6 +246,38 @@ int alphabetBubble(struct Team *list, int k, int j)
 
 void bubbleSortByPerform(struct Team *list)
 {
+  // now tf is a special variable named after true and false which is a bit of a misnomer but I'm rambling
+  // If tf is 1 then the program executed successfully, and did swap the two inputed positions
+  // If tf is 0 the variables being compared were equal to each other and thus no action was taken
+  // If tf is -1 then nothing occured as both variables were in the correct position.
+  int tf;
+  int	j, i,	k;
+  int arraySize = NUM_TEAMS;
+  for(i	=	0;	i	<	arraySize;	i++)
+  {
+    for(k	=	0;	k	<	arraySize-1;	k++)
+    {
+      tf = 1;
+      int j  = k+1;
+      tf = pointsBubble(list,k,j);
+
+      if(tf == 0)
+      {
+        tf = differenceBubble(list,k,j);
+
+        if(tf == 0)
+        {
+          tf = goalsBubble(list,k,j);
+
+          if(tf == 0)
+          {
+            tf = alphabetBubble(list,k,j);
+
+          }
+        }
+      }
+    }
+  }
 }
 
 void bubbleSortByAlpha(struct Team *list)
@@ -328,7 +364,7 @@ void outputAlphabeticalStandings(struct Team *list)
 void outputGroupStandings(struct Team *list)
 {
   printf("\n");
-  outputTeamStandings(list);
+  outputTeamStandingsGroupSpacing(list);
 }
 
 void outputPerformanceStandings(struct Team *list)
@@ -347,7 +383,21 @@ void outputTeamStandings(struct Team *list)
   char initialGroup[2] = "_";
   //Split for neatness and also doing this for some reason fixed a bug I was having so...
   printf("| Group | %-16s | %-13s | %-13s | %-13s ","Name","Games Played", "Games Won","Games Drawn");
-  printf("| %-13s | %-13s | %-13s | %-13s |\n","Games Lost","Goals For", "Goals Against","Points");
+  printf("| %-13s | %-13s | %-13s | %-13s | %-13s |\n","Games Lost","Goals For", "Goals Against", "Goal Diff", "Points");
+  for (int i = 0; i<NUM_TEAMS; i++)
+  {
+    list[i].points = list[i].gWon*3+list[i].gDrawn;
+    struct Team t = list[i];
+    printf("| %-5s | %-16s | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d |\n",t.group,t.name,t.gPlayed,t.gWon,t.gDrawn,t.gLost,t.goalFor,t.goalAgainst,t.goalFor-t.goalAgainst,t.points);
+  }
+}
+
+void outputTeamStandingsGroupSpacing(struct Team *list)
+{
+  char initialGroup[2] = "_";
+  //Split for neatness and also doing this for some reason fixed a bug I was having so...
+  printf("| Group | %-16s | %-13s | %-13s | %-13s ","Name","Games Played", "Games Won","Games Drawn");
+  printf("| %-13s | %-13s | %-13s | %-13s | %-13s |\n","Games Lost","Goals For", "Goals Against", "Goal Diff", "Points");
   for (int i = 0; i<NUM_TEAMS; i++)
   {
     list[i].points = list[i].gWon*3+list[i].gDrawn;
@@ -372,8 +422,8 @@ void outputTeamStandingsReverse(struct Team *list)
 {
   char initialGroup[2] = "_";
   //Split for neatness and also doing this for some reason fixed a bug I was having so...
-  printf("| Group | %-16s | %-13s | %-13s | %-13s ","Name","Games Played", "Games Won","Games Drawn");
-  printf("| %-13s | %-13s | %-13s | %-13s |\n","Games Lost","Goals For", "Goals Against","Points");
+  printf("\n| Group | %-16s | %-13s | %-13s | %-13s ","Name","Games Played", "Games Won","Games Drawn");
+  printf("| %-13s | %-13s | %-13s | %-13s | %-13s |\n","Games Lost","Goals For", "Goals Against", "Goal Diff", "Points");
   for (int i = 0; i<NUM_TEAMS; i++)
   {
     list[i].points = list[i].gWon*3+list[i].gDrawn;
@@ -597,5 +647,5 @@ struct Team newTeamGeneration()
 
 void printBeginningText()
 {
-  printf("FIFA World Cup – Russia 2018\nProgram	Developed	by Solomon Scobie\nStudent Number c3302821\nComputer Lab Wednesday 9 am - 12 pm");
+  printf("FIFA World Cup - Russia 2018\nProgram	Developed by Solomon Scobie\nStudent Number c3302821\nComputer Lab Wednesday 9 am - 12 pm\n\n");
 }
