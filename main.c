@@ -396,8 +396,6 @@ void outputTeamStandingsGroupSpacing(struct Team *list)
 {
   char initialGroup[2] = "_";
   //Split for neatness and also doing this for some reason fixed a bug I was having so...
-  printf("| Group | %-16s | %-13s | %-13s | %-13s ","Name","Games Played", "Games Won","Games Drawn");
-  printf("| %-13s | %-13s | %-13s | %-13s | %-13s |\n","Games Lost","Goals For", "Goals Against", "Goal Diff", "Points");
   for (int i = 0; i<NUM_TEAMS; i++)
   {
     list[i].points = list[i].gWon*3+list[i].gDrawn;
@@ -406,7 +404,7 @@ void outputTeamStandingsGroupSpacing(struct Team *list)
     {
       strcpy(initialGroup, list[i].group);
       //Split for neatness and also doing this for some reason fixed a bug I was having so...
-      printf("\n| Group | %-16s | %-13s | %-13s | %-13s ","Name","Games Played", "Games Won","Games Drawn");
+      printf("| Group | %-16s | %-13s | %-13s | %-13s ","Name","Games Played", "Games Won","Games Drawn");
       printf("| %-13s | %-13s | %-13s | %-13s | %-13s |\n","Games Lost","Goals For", "Goals Against", "Goal Diff", "Points");
 
         printf("| %-5s | %-16s | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d | %-13d |\n",t.group,t.name,t.gPlayed,t.gWon,t.gDrawn,t.gLost,t.goalFor,t.goalAgainst,t.goalFor-t.goalAgainst,t.points);
@@ -448,7 +446,7 @@ void pullMatchStats(struct Team *list)
 {
   FILE *matchList;
 
-  printf("opening the matchlist file\n");
+  printf("Opening the matchlist file\nProcessing...\n\n");
   matchList = fopen("match.dat", "r");
   int teamNum1,teamNum2,score1,score2;
   char tName1[16],tName2[16];
@@ -467,7 +465,6 @@ void pullMatchStats(struct Team *list)
     // Reading the file and storing what we need
     if ( fscanf(matchList, "%s %d %s %d", tName1, &score1, tName2, &score2) == EOF )
     {
-      printf("End of file has been reached after %d loops\n");
       loop = -1;
     }
     counter ++;
@@ -529,7 +526,7 @@ void pullMatchStats(struct Team *list)
             else
             {
               //printf("%d %s %s\n",i,list[i].name,currName);
-              printf("%s %d %s %d - scores may not be negative, %s\n", tName1, score1, tName2, score2, currName);
+              printf("    %s %d %s %d - scores may not be negative, %s\n", tName1, score1, tName2, score2, currName);
               breakOut = -1;
             }
           }
@@ -538,7 +535,7 @@ void pullMatchStats(struct Team *list)
             //printf("%d %s %s\n",i,list[i].name,currName);
             if (i == NUM_TEAMS-1)
             {
-              printf("%s %d %s %d - The team name %s does not exist\n", tName1, score1, tName2, score2, currName);
+              printf("    %s %d %s %d - The team name %s does not exist\n", tName1, score1, tName2, score2, currName);
               breakOut = -1;
             }
           }
@@ -594,6 +591,7 @@ void pullMatchStats(struct Team *list)
       }
     }
   }
+  printf("\nMatch statistics have been saved, closing matchlist file\n\n");
   fclose(matchList);
 }
 
@@ -601,6 +599,7 @@ void getTeamList(struct Team *list)
 {
   FILE *teamList;
 
+  printf("Opening team list file\nProcessing...\n\n");
   char tName[16];
   char bracket[2];
   teamList = fopen("team.dat", "r");
@@ -628,6 +627,7 @@ void getTeamList(struct Team *list)
       tCounter++;
     }
   } while(loop != -1);
+  printf("Team list has been generated, closing team list file\n\n");
   fclose(teamList);
 }
 
